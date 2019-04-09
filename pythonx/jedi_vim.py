@@ -260,7 +260,7 @@ def get_script(source=None, column=None):
         b.name for b in vim.buffers if (
             b.name is not None and
             b.name.endswith('.py') and
-            b.options['buflisted'])]
+            int(vim.eval("buflisted(%s)" % b.number)))]
     if source is None:
         source = '\n'.join(vim.current.buffer)
     row = vim.current.window.cursor[0]
