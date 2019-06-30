@@ -795,7 +795,7 @@ def show_call_signatures(signatures=()):
     for i, signature in enumerate(signatures):
         line, column = signature.bracket_start
         # signatures are listed above each other
-        line_to_replace = line - i - 1
+        line_to_replace = line - len(seen_sigs) - 1
         # because there's a space before the bracket
         insert_column = column - 1
         if insert_column < 0 or line_to_replace <= 0:
@@ -806,7 +806,8 @@ def show_call_signatures(signatures=()):
         line = vim_eval("getline(%s)" % line_to_replace)
 
         # Descriptions are usually looking like `param name`, remove the param.
-        params = [p.description.replace('\n', '').replace('param ', '', 1)
+        params = [(p.description.replace('\n', '').replace('param ', '', 1)
+                   .split(': ', 1)[0])  # elide type annotations
                   for p in signature.params]
         try:
             # *_*PLACEHOLDER*_* makes something fat. See after/syntax file.
