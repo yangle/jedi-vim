@@ -498,6 +498,11 @@ def show_call_signatures(signatures=()):
         params = [(p.description.replace('\n', '').replace('param ', '', 1)
                    .split(': ', 1)[0])  # elide type annotations
                   for p in signature.params]
+
+        # Workaround for bound classmethod.
+        if params and params[0] == 'cls':
+            params = params[1:]
+
         try:
             # *_*PLACEHOLDER*_* makes something fat. See after/syntax file.
             params[signature.index] = '*_*%s*_*' % params[signature.index]
