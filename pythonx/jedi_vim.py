@@ -301,7 +301,7 @@ def load_project():
 
 
 @catch_and_print_exceptions
-def get_script(source=None):
+def get_script(source=None, extra_source=None):
     jedi.settings.additional_dynamic_modules = [
         b.name for b in vim.buffers if (
             b.name is not None and
@@ -309,6 +309,8 @@ def get_script(source=None):
             int(vim.eval("buflisted(%s)" % b.number)))]
     if source is None:
         source = '\n'.join(vim.current.buffer)
+    if extra_source is not None:
+        source = source + '\n' + extra_source
     buf_path = vim.current.buffer.name
     if not buf_path:
         # If a buffer has no name its name is an empty string.
@@ -406,13 +408,13 @@ def tempfile(content):
 
 @_check_jedi_availability(show_error=True)
 @catch_and_print_exceptions
-def goto(mode="goto"):
+def goto(mode="goto", extra_source=None):
     """
     :param str mode: "definition", "assignment", "goto"
     :rtype: list of jedi.api.classes.Name
     """
-    script = get_script()
-    pos = get_pos()
+    script = get_script(extra_source=extra_source)
+    pos = get_pos() if extra_source is None else ()
     if mode == "goto":
         names = script.goto(*pos, follow_imports=True)
     elif mode == "definition":
@@ -423,7 +425,11 @@ def goto(mode="goto"):
         names = script.goto(*pos, follow_imports=True, only_stubs=True)
 
     if not names:
-        echo_highlight("Couldn't find any definitions for this.")
+        # Use the current word under cursor as a fallback before giving up.
+        if extra_source is None:
+            return goto(mode=mode, extra_source=vim.eval('expand("<cexpr>")'))
+        else:
+            echo_highlight("Couldn't find any definitions for this.")
     elif len(names) == 1 and mode != "related_name":
         n = list(names)[0]
         _goto_specific_name(n)
